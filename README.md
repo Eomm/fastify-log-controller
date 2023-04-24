@@ -77,6 +77,13 @@ example()
 
 Note that it works with [custom logger levels](https://github.com/pinojs/pino/blob/master/docs/api.md#customlevels-object) too!
 
+If you want to go deeper into the encapsulated context concept, you can read these sources:
+
+- [YouTube Video](https://www.youtube.com/watch?v=BnnL7fAKqNU)
+- [Complete Guide to Fastify plugin system](https://backend.cafe/the-complete-guide-to-the-fastify-plugin-system)
+- [What is the exact use of `fastify-plugin`](https://stackoverflow.com/questions/61020394/what-is-the-exact-use-of-fastify-plugin/61054534#61054534)
+
+
 ### Known limitations
 
 In fastify you can **voluntarily** set log level for every encapsulated context and route, but you can't change it at runtime.  
