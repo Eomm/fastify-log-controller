@@ -1,25 +1,46 @@
 'use strict'
 
 const { test } = require('tap')
-const Fastify = require('fastify')
 const split = require('split2')
+
+const Fastify = require('fastify')
+const pino = require('pino')
 
 const plugin = require('../plugin')
 
-test('Basic usage', async (t) => {
+function buildTestLogger () {
   const logStream = split(JSON.parse)
+
+  const buffer = []
+  logStream.on('data', line => {
+    buffer.push(line)
+  })
+
+  return {
+    config: {
+      level: 'trace',
+      stream: pino.multistream([
+        {
+          level: 'trace',
+          stream: logStream
+        }
+      ])
+    },
+    buffer,
+    messages () {
+      return buffer.map(line => line.msg)
+    }
+  }
+}
+
+test('Basic usage', async (t) => {
+  const logStream = buildTestLogger()
   const app = Fastify({
     disableRequestLogging: true,
-    logger: {
-      stream: logStream
-    }
+    logger: logStream.config
   })
 
-  logStream.on('data', line => {
-    console.log(line)
-  })
-
-  app.register(plugin)
+  await app.register(plugin)
 
   app.register(async function plugin (app) {
     app.get('/bar', (request, reply) => {
@@ -28,9 +49,10 @@ test('Basic usage', async (t) => {
       request.log.info('bar info')
       request.log.warn('bar warn')
       request.log.error('bar error')
+      request.log.fatal('bar fatal')
       return {}
     })
-  }, { logCtrl: { name: 'one' } })
+  }, { logCtrl: { name: 'bar' } })
 
   app.register(async function plugin (app, opts) {
     app.get('/foo', (request, reply) => {
@@ -39,9 +61,10 @@ test('Basic usage', async (t) => {
       request.log.info('foo info')
       request.log.warn('foo warn')
       request.log.error('foo error')
+      request.log.fatal('foo fatal')
       return {}
     })
-  }, { logCtrl: { name: 'two' } })
+  }, { logCtrl: { name: 'foo' } })
 
   app.register(async function plugin (app, opts) {
     app.get('/none', (request, reply) => {
@@ -50,32 +73,94 @@ test('Basic usage', async (t) => {
       request.log.info('none info')
       request.log.warn('none warn')
       request.log.error('none error')
+      request.log.fatal('none fatal')
       return {}
     })
   })
 
+  const expected = []
+
+  const res = await changeLogLevel(app, { level: 'warn', contextName: 'bar' })
+  t.equal(res.statusCode, 204)
+  await triggerLog(t, app, '/bar')
+  await triggerLog(t, app, '/foo')
+  await triggerLog(t, app, '/none')
+  expected.push(...[
+    'bar warn',
+    'bar error',
+    'bar fatal',
+    'foo trace',
+    'foo debug',
+    'foo info',
+    'foo warn',
+    'foo error',
+    'foo fatal',
+    'none trace',
+    'none debug',
+    'none info',
+    'none warn',
+    'none error',
+    'none fatal'
+  ])
+
+  await changeLogLevel(app, { level: 'debug', contextName: 'bar' })
+  await triggerLog(t, app, '/bar')
+  await triggerLog(t, app, '/foo')
+  await triggerLog(t, app, '/none')
+  expected.push(...[
+    'bar debug',
+    'bar info',
+    'bar warn',
+    'bar error',
+    'bar fatal',
+    'foo trace',
+    'foo debug',
+    'foo info',
+    'foo warn',
+    'foo error',
+    'foo fatal',
+    'none trace',
+    'none debug',
+    'none info',
+    'none warn',
+    'none error',
+    'none fatal'
+  ])
+
+  await changeLogLevel(app, { level: 'error', contextName: 'bar' })
+  await changeLogLevel(app, { level: 'error', contextName: 'foo' })
+  await triggerLog(t, app, '/bar')
+  await triggerLog(t, app, '/foo')
+  await triggerLog(t, app, '/none')
+  expected.push(...[
+    'bar error',
+    'bar fatal',
+    'foo error',
+    'foo fatal',
+    'none trace',
+    'none debug',
+    'none info',
+    'none warn',
+    'none error',
+    'none fatal'
+  ])
+
+  t.same(logStream.messages(), expected)
+})
+
+async function triggerLog (t, app, url) {
   const res = await app.inject({
+    method: 'GET',
+    url
+  })
+  t.equal(res.statusCode, 200)
+  return res
+}
+
+function changeLogLevel (app, body) {
+  return app.inject({
     method: 'POST',
     url: '/log-level',
-    body: {
-      level: 'warn',
-      contextName: 'one'
-    }
+    body
   })
-  t.equal(res.statusCode, 204)
-
-  const res2 = await app.inject('/bar')
-  t.equal(res2.statusCode, 200)
-  // for await (const line of logStream) {
-  //   console.log(line)
-  // }
-
-  // {
-  //   const line = await once(logStream, 'data')
-  //   console.log(line)
-  // }
-  // {
-  //   const line = await once(logStream, 'data')
-  //   console.log(line)
-  // }
-})
+}

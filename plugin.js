@@ -1,15 +1,36 @@
 'use strict'
 
 const fp = require('fastify-plugin')
-const fastifyExplorer = require('fastify-explorer')
+
+/**
+ * Every request creates a new child logger based on:
+ * - the unique main logger
+ * - the route's configuration/context
+ */
 
 async function fastifyLogController (fastify, opts) {
-  fastify.register(fastifyExplorer, { optionKey: 'logCtrl' })
+  const { optionKey = 'logCtrl' } = opts
+
+  const pocket = new Map()
+
+  // Inspired by https://github.com/Eomm/fastify-explorer
+  fastify.addHook('onRegister', function fastifyExplorerTracker (instance, opts) {
+    const pluginId = opts?.[optionKey]?.name
+    if (pluginId) {
+      if (pocket.has(pluginId)) {
+        throw new Error(`The instance named ${pluginId} has been already registerd`)
+      }
+      pocket.set(pluginId, instance.log.level) // save the initial log level
+
+      // todo manage the case where the route has a specific log level
+      instance.addHook('onRequest', logLevelHook.bind(instance, pluginId))
+    }
+  })
 
   const logLevels = Object.keys(fastify.log.levels.values)
 
   fastify.post('/log-level', {
-    handler: logLevelController,
+    handler: logLevelControllerHandler,
     schema: {
       body: {
         type: 'object',
@@ -20,18 +41,24 @@ async function fastifyLogController (fastify, opts) {
       }
     }
   })
-}
 
-function logLevelController (request, reply) {
-  const instance = this.giveMe(request.body.contextName)
-
-  if (!instance) {
-    reply.code(404).send({ error: 'Context not found' })
-    return
+  function logLevelHook (pluginId, request, reply, done) {
+    if (request.log.level !== pocket.get(pluginId)) {
+      request.log.level = pocket.get(pluginId)
+    }
+    done()
   }
 
-  instance.log.level = request.body.level
-  reply.code(204).send()
+  function logLevelControllerHandler (request, reply) {
+    const instance = pocket.get(request.body.contextName)
+    if (!instance) {
+      reply.code(404).send({ error: 'Context not found' })
+      return
+    }
+
+    pocket.set(request.body.contextName, request.body.level)
+    reply.code(204).send()
+  }
 }
 
 module.exports = fp(fastifyLogController, {
