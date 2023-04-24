@@ -9,7 +9,10 @@ const fp = require('fastify-plugin')
  */
 
 async function fastifyLogController (fastify, opts) {
-  const { optionKey = 'logCtrl' } = opts
+  const {
+    optionKey = 'logCtrl',
+    routeConfig
+  } = opts
 
   const pocket = new Map()
 
@@ -20,7 +23,9 @@ async function fastifyLogController (fastify, opts) {
       if (pocket.has(pluginId)) {
         throw new Error(`The instance named ${pluginId} has been already registerd`)
       }
-      pocket.set(pluginId, instance.log.level) // save the initial log level
+
+      const defaultLogLevel = opts.logLevel || instance.log.level
+      pocket.set(pluginId, defaultLogLevel) // save the initial log level
 
       // todo manage the case where the route has a specific log level
       instance.addHook('onRequest', logLevelHook.bind(instance, pluginId))
@@ -30,6 +35,7 @@ async function fastifyLogController (fastify, opts) {
   const logLevels = Object.keys(fastify.log.levels.values)
 
   fastify.post('/log-level', {
+    ...routeConfig,
     handler: logLevelControllerHandler,
     schema: {
       body: {
@@ -44,7 +50,8 @@ async function fastifyLogController (fastify, opts) {
   })
 
   function logLevelHook (pluginId, request, reply, done) {
-    if (request.log.level !== pocket.get(pluginId)) {
+    if (!request.routeOptions.logLevel &&
+      request.log.level !== pocket.get(pluginId)) {
       request.log.level = pocket.get(pluginId)
     }
     done()

@@ -40,7 +40,7 @@ test('Basic usage', async (t) => {
     logger: logStream.config
   })
 
-  await app.register(plugin)
+  app.register(plugin)
 
   app.register(async function plugin (app) {
     app.get('/bar', (request, reply) => {
@@ -148,13 +148,87 @@ test('Basic usage', async (t) => {
   t.same(logStream.messages(), expected)
 })
 
+test('Does not overwrite plugin config', async (t) => {
+  const logStream = buildTestLogger()
+  const app = Fastify({
+    disableRequestLogging: true,
+    logger: logStream.config
+  })
+
+  app.register(plugin)
+
+  app.register(async function plugin (app) {
+    app.get('/bar', (request, reply) => {
+      request.log.debug('bar debug')
+      request.log.fatal('bar fatal')
+      return {}
+    })
+  }, {
+    logLevel: 'fatal',
+    logCtrl: { name: 'bar' }
+  })
+
+  const expected = []
+
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    'bar fatal'
+  ])
+
+  const res = await changeLogLevel(app, { level: 'trace', contextName: 'bar' })
+  t.equal(res.statusCode, 204)
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    // 'bar debug',
+    'bar fatal'
+  ])
+
+  t.same(logStream.messages(), expected)
+})
+
+test('Does not overwrite route config', async (t) => {
+  const logStream = buildTestLogger()
+  const app = Fastify({
+    disableRequestLogging: true,
+    logger: logStream.config
+  })
+
+  app.register(plugin)
+
+  app.register(async function plugin (app) {
+    app.get('/bar', {
+      logLevel: 'fatal',
+      handler: (request, reply) => {
+        request.log.trace('bar trace')
+        request.log.fatal('bar fatal')
+        return {}
+      }
+    })
+  }, { logCtrl: { name: 'bar' } })
+
+  const expected = []
+
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    'bar fatal'
+  ])
+
+  await changeLogLevel(app, { level: 'trace', contextName: 'bar' })
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    'bar fatal'
+  ])
+
+  t.same(logStream.messages(), expected)
+})
+
 test('Bad input', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
     disableRequestLogging: true,
     logger: logStream.config
   })
-  await app.register(plugin)
+  app.register(plugin)
 
   {
     const res = await changeLogLevel(app, { level: 'warn', contextName: 'bar' })
@@ -187,7 +261,7 @@ test('Bad usage', async (t) => {
     disableRequestLogging: true,
     logger: logStream.config
   })
-  await app.register(plugin)
+  app.register(plugin)
 
   app.register(async function plugin (app, opts) {
     // none
@@ -203,6 +277,67 @@ test('Bad usage', async (t) => {
   } catch (error) {
     t.ok(error)
     t.equal(error.message, 'The instance named foo has been already registerd')
+  }
+})
+
+test('Custom log levels', async (t) => {
+  const logStream = buildTestLogger()
+  const app = Fastify({
+    disableRequestLogging: true,
+    logger: {
+      ...logStream.config,
+      customLevels: {
+        trentatre: 33,
+        foo: 42
+      }
+    }
+  })
+
+  app.register(plugin)
+
+  app.register(async function plugin (app) {
+    app.get('/bar', (request, reply) => {
+      request.log.trace('bar trace')
+      request.log.debug('bar debug')
+      request.log.info('bar info')
+      request.log.trentatre('bar 33')
+      request.log.warn('bar warn')
+      request.log.foo('bar foo') // 42
+      request.log.error('bar error')
+      request.log.fatal('bar fatal')
+      return {}
+    })
+  }, { logCtrl: { name: 'bar' } })
+
+  const expected = []
+
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    'bar trace',
+    'bar debug',
+    'bar info',
+    'bar 33',
+    'bar warn',
+    'bar foo',
+    'bar error',
+    'bar fatal'
+  ])
+
+  const res = await changeLogLevel(app, { level: 'foo', contextName: 'bar' })
+  t.equal(res.statusCode, 204)
+
+  await triggerLog(t, app, '/bar')
+  expected.push(...[
+    'bar foo',
+    'bar error',
+    'bar fatal'
+  ])
+
+  t.same(logStream.messages(), expected)
+
+  {
+    const res = await changeLogLevel(app, { level: 'baz', contextName: 'bar' })
+    t.equal(res.statusCode, 400)
   }
 })
 
