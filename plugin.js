@@ -34,6 +34,7 @@ async function fastifyLogController (fastify, opts) {
     schema: {
       body: {
         type: 'object',
+        required: ['level', 'contextName'],
         properties: {
           level: { type: 'string', enum: logLevels },
           contextName: { type: 'string', minLength: 1, maxLength: 500 }
@@ -52,7 +53,7 @@ async function fastifyLogController (fastify, opts) {
   function logLevelControllerHandler (request, reply) {
     const instance = pocket.get(request.body.contextName)
     if (!instance) {
-      reply.code(404).send({ error: 'Context not found' })
+      reply.code(404).send(new Error('Context not found'))
       return
     }
 

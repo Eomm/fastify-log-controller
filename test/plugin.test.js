@@ -148,6 +148,64 @@ test('Basic usage', async (t) => {
   t.same(logStream.messages(), expected)
 })
 
+test('Bad input', async (t) => {
+  const logStream = buildTestLogger()
+  const app = Fastify({
+    disableRequestLogging: true,
+    logger: logStream.config
+  })
+  await app.register(plugin)
+
+  {
+    const res = await changeLogLevel(app, { level: 'warn', contextName: 'bar' })
+    t.same(res.json(), {
+      statusCode: 404,
+      error: 'Not Found',
+      message: 'Context not found'
+    })
+  }
+
+  {
+    const res = await changeLogLevel(app, { level: 'what', contextName: 'bar' })
+    t.equal(res.statusCode, 400)
+  }
+
+  {
+    const res = await changeLogLevel(app, { level: 'info' })
+    t.equal(res.statusCode, 400)
+  }
+
+  {
+    const res = await changeLogLevel(app, { level: 'info', contextName: 'x'.repeat(1000) })
+    t.equal(res.statusCode, 400)
+  }
+})
+
+test('Bad usage', async (t) => {
+  const logStream = buildTestLogger()
+  const app = Fastify({
+    disableRequestLogging: true,
+    logger: logStream.config
+  })
+  await app.register(plugin)
+
+  app.register(async function plugin (app, opts) {
+    // none
+  }, { logCtrl: { name: 'foo' } })
+
+  app.register(async function plugin (app, opts) {
+    // none
+  }, { logCtrl: { name: 'foo' } })
+
+  try {
+    await app.ready()
+    t.fail('should throw')
+  } catch (error) {
+    t.ok(error)
+    t.equal(error.message, 'The instance named foo has been already registerd')
+  }
+})
+
 async function triggerLog (t, app, url) {
   const res = await app.inject({
     method: 'GET',
