@@ -276,7 +276,7 @@ test('Bad usage', async (t) => {
     t.fail('should throw')
   } catch (error) {
     t.ok(error)
-    t.equal(error.message, 'The instance named foo has been already registerd')
+    t.equal(error.message, 'The instance named foo has been already registered')
   }
 })
 

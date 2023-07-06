@@ -21,7 +21,7 @@ async function fastifyLogController (fastify, opts) {
     const pluginId = opts?.[optionKey]?.name
     if (pluginId) {
       if (pocket.has(pluginId)) {
-        throw new Error(`The instance named ${pluginId} has been already registerd`)
+        throw new Error(`The instance named ${pluginId} has been already registered`)
       }
 
       const defaultLogLevel = opts.logLevel || instance.log.level
