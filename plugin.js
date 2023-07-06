@@ -34,6 +34,26 @@ async function fastifyLogController (fastify, opts) {
 
   const logLevels = Object.keys(fastify.log.levels.values)
 
+  fastify.get('/log-level', {
+    ...routeConfig,
+    handler: logLevelControllerReader,
+    schema: {
+      response: {
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            required: ['level', 'contextName'],
+            properties: {
+              contextName: { type: 'string', minLength: 1, maxLength: 500 },
+              level: { type: 'string', enum: logLevels }
+            }
+          }
+        }
+      }
+    }
+  })
+
   fastify.post('/log-level', {
     ...routeConfig,
     handler: logLevelControllerHandler,
@@ -48,6 +68,10 @@ async function fastifyLogController (fastify, opts) {
       }
     }
   })
+
+  function logLevelControllerReader (request, reply) {
+    reply.code(200).send(Array.from(pocket, e => ({ contextName: e[0], level: e[1] })))
+  }
 
   function logLevelHook (pluginId, request, reply, done) {
     if (!request.routeOptions.logLevel &&

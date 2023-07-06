@@ -146,6 +146,12 @@ test('Basic usage', async (t) => {
   ])
 
   t.same(logStream.messages(), expected)
+
+  {
+    const res = await getLogLevels(app)
+    t.equal(res.statusCode, 200)
+    t.same(res.json(), [{ contextName: 'bar', level: 'error' }, { contextName: 'foo', level: 'error' }])
+  }
 })
 
 test('Does not overwrite plugin config', async (t) => {
@@ -339,6 +345,12 @@ test('Custom log levels', async (t) => {
     const res = await changeLogLevel(app, { level: 'baz', contextName: 'bar' })
     t.equal(res.statusCode, 400)
   }
+
+  {
+    const res = await getLogLevels(app)
+    t.equal(res.statusCode, 200)
+    t.same(res.json(), [{ contextName: 'bar', level: 'foo' }])
+  }
 })
 
 async function triggerLog (t, app, url) {
@@ -355,5 +367,12 @@ function changeLogLevel (app, body) {
     method: 'POST',
     url: '/log-level',
     body
+  })
+}
+
+function getLogLevels (app) {
+  return app.inject({
+    method: 'GET',
+    url: '/log-level'
   })
 }
