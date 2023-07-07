@@ -77,6 +77,13 @@ example()
 
 Note that it works with [custom logger levels](https://github.com/pinojs/pino/blob/master/docs/api.md#customlevels-object) too!
 
+The same route allows you to recover available contexts and currently set log levels:
+
+```sh
+$ curl http://localhost:3000/log-level
+[{"contextName":"bar","level":"debug"}]
+```
+
 If you want to go deeper into the encapsulated context concept, you can read these sources:
 
 - [YouTube Video](https://www.youtube.com/watch?v=BnnL7fAKqNU)
