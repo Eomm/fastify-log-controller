@@ -25,7 +25,7 @@ npm i fastify-log-controller
 When you register this plugin, a new route will be available at `/log-level` (by default)
 that allows you to change the log level of your application at runtime!
 
-You will be albe to change the log level for every tracked encapsulated context!
+You will be able to change the log level for every tracked encapsulated context!
 
 This is useful when you want to change the log level of your application without restarting it and
 resetting what is in memory.
@@ -82,6 +82,13 @@ The same route allows you to recover available contexts and currently set log le
 ```sh
 $ curl http://localhost:3000/log-level
 [{"contextName":"bar","level":"debug"}]
+```
+
+The '/log-level/levels' route allows you to recover available log levels:
+
+```sh
+$ curl http://localhost:3000/log-level/levels
+["trace","debug","info","warn","error","fatal"]
 ```
 
 If you want to go deeper into the encapsulated context concept, you can read these sources:

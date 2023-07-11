@@ -150,6 +150,12 @@ test('Basic usage', async (t) => {
   {
     const res = await getLogLevels(app)
     t.equal(res.statusCode, 200)
+    t.same(res.json(), ['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+  }
+
+  {
+    const res = await getCurrentLogLevels(app)
+    t.equal(res.statusCode, 200)
     t.same(res.json(), [{ contextName: 'bar', level: 'error' }, { contextName: 'foo', level: 'error' }])
   }
 })
@@ -349,6 +355,12 @@ test('Custom log levels', async (t) => {
   {
     const res = await getLogLevels(app)
     t.equal(res.statusCode, 200)
+    t.same(res.json(), ['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'trentatre', 'foo'])
+  }
+
+  {
+    const res = await getCurrentLogLevels(app)
+    t.equal(res.statusCode, 200)
     t.same(res.json(), [{ contextName: 'bar', level: 'foo' }])
   }
 })
@@ -371,6 +383,13 @@ function changeLogLevel (app, body) {
 }
 
 function getLogLevels (app) {
+  return app.inject({
+    method: 'GET',
+    url: '/log-level/levels'
+  })
+}
+
+function getCurrentLogLevels (app) {
   return app.inject({
     method: 'GET',
     url: '/log-level'
