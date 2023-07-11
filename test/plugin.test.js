@@ -149,14 +149,12 @@ test('Basic usage', async (t) => {
 
   {
     const res = await getLogLevels(app)
-    t.equal(res.statusCode, 200)
-    t.same(res.json(), ['trace', 'debug', 'info', 'warn', 'error', 'fatal'])
+    t.equal(res.statusCode, 404)
   }
 
   {
     const res = await getCurrentLogLevels(app)
-    t.equal(res.statusCode, 200)
-    t.same(res.json(), [{ contextName: 'bar', level: 'error' }, { contextName: 'foo', level: 'error' }])
+    t.equal(res.statusCode, 404)
   }
 })
 
@@ -305,7 +303,7 @@ test('Custom log levels', async (t) => {
     }
   })
 
-  app.register(plugin)
+  app.register(plugin, { exposeGet: true })
 
   app.register(async function plugin (app) {
     app.get('/bar', (request, reply) => {

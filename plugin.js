@@ -11,6 +11,7 @@ const fp = require('fastify-plugin')
 async function fastifyLogController (fastify, opts) {
   const {
     optionKey = 'logCtrl',
+    exposeGet = false,
     routeConfig
   } = opts
 
@@ -34,40 +35,42 @@ async function fastifyLogController (fastify, opts) {
 
   const logLevels = Object.keys(fastify.log.levels.values)
 
-  fastify.get('/log-level/levels', {
-    ...routeConfig,
-    handler: logLevelControllerLevels,
-    schema: {
-      response: {
-        200: {
-          type: 'array',
-          items: {
-            type: 'string'
-          }
-        }
-      }
-    }
-  })
-
-  fastify.get('/log-level', {
-    ...routeConfig,
-    handler: logLevelControllerReader,
-    schema: {
-      response: {
-        200: {
-          type: 'array',
-          items: {
-            type: 'object',
-            required: ['level', 'contextName'],
-            properties: {
-              contextName: { type: 'string', minLength: 1, maxLength: 500 },
-              level: { type: 'string', enum: logLevels }
+  if (exposeGet) {
+    fastify.get('/log-level/levels', {
+      ...routeConfig,
+      handler: logLevelControllerLevels,
+      schema: {
+        response: {
+          200: {
+            type: 'array',
+            items: {
+              type: 'string'
             }
           }
         }
       }
-    }
-  })
+    })
+
+    fastify.get('/log-level', {
+      ...routeConfig,
+      handler: logLevelControllerReader,
+      schema: {
+        response: {
+          200: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: ['level', 'contextName'],
+              properties: {
+                contextName: { type: 'string', minLength: 1, maxLength: 500 },
+                level: { type: 'string', enum: logLevels }
+              }
+            }
+          }
+        }
+      }
+    })
+  }
 
   fastify.post('/log-level', {
     ...routeConfig,

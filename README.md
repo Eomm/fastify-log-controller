@@ -77,14 +77,14 @@ example()
 
 Note that it works with [custom logger levels](https://github.com/pinojs/pino/blob/master/docs/api.md#customlevels-object) too!
 
-The same route allows you to recover available contexts and currently set log levels:
+If the `exposeGet` configuration option is set to `true`, the same route allows you to recover available contexts and currently set log levels:
 
 ```sh
 $ curl http://localhost:3000/log-level
 [{"contextName":"bar","level":"debug"}]
 ```
 
-The '/log-level/levels' route allows you to recover available log levels:
+and the '/log-level/levels' route allows you to recover available log levels:
 
 ```sh
 $ curl http://localhost:3000/log-level/levels
@@ -144,6 +144,9 @@ You can pass some options to the plugin:
 app.register(require('fastify-log-controller'), {
   // How you want to call the option in the encapsulated context
   optionKey: 'logCtrl',
+
+  // Enable get routes
+  exposeGet: false,
 
   // Enhance the route config of the log controller route
   // It is not possible to change the handler and the schema
