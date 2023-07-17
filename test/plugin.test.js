@@ -333,6 +333,12 @@ test('Custom log levels', async (t) => {
     'bar fatal'
   ])
 
+  {
+    const res = await getCurrentLogLevels(app)
+    t.equal(res.statusCode, 200)
+    t.same(res.json(), [{ contextName: 'bar', level: 'trace' }])
+  }
+
   const res = await changeLogLevel(app, { level: 'foo', contextName: 'bar' })
   t.equal(res.statusCode, 204)
 
