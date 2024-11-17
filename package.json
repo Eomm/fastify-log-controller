@@ -29,16 +29,16 @@
     "url": "https://github.com/Eomm/fastify-log-controller/issues"
   },
   "engines": {
-    "node": ">= 14"
+    "node": ">= 20"
   },
   "homepage": "https://github.com/Eomm/fastify-log-controller#readme",
   "devDependencies": {
-    "fastify": "^4.15.0",
+    "fastify": "^5.0.0",
     "split2": "^4.2.0",
     "standard": "^17.0.0",
     "tap": "^16.3.4"
   },
   "dependencies": {
-    "fastify-plugin": "^4.5.0"
+    "fastify-plugin": "^5.0.0"
   }
 }
