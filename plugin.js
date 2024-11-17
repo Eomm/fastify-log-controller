@@ -117,7 +117,7 @@ async function fastifyLogController (fastify, opts) {
 
 module.exports = fp(fastifyLogController, {
   name: 'fastify-log-controller',
-  fastify: '^4'
+  fastify: '^5'
 })
 
 module.exports.default = fastifyLogController

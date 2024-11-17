@@ -1,6 +1,6 @@
 # fastify-log-controller
 
-[![Build Status](https://github.com/Eomm/fastify-log-controller/workflows/ci/badge.svg)](https://github.com/Eomm/fastify-log-controller/actions)
+[![ci](https://github.com/Eomm/fastify-log-controller/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eomm/fastify-log-controller/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/fastify-log-controller)](https://www.npmjs.com/package/fastify-log-controller)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
@@ -17,6 +17,7 @@ npm i fastify-log-controller
 
 | Plugin version | Fastify version |
 | ------------- |:---------------:|
+| `^2.0.0` | `^5.0.0` |
 | `^1.0.0` | `^4.0.0` |
 
 

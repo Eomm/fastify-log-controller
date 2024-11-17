@@ -1,6 +1,6 @@
 'use strict'
 
-const { test } = require('tap')
+const { test } = require('node:test')
 const split = require('split2')
 
 const Fastify = require('fastify')
@@ -81,7 +81,7 @@ test('Basic usage', async (t) => {
   const expected = []
 
   const res = await changeLogLevel(app, { level: 'warn', contextName: 'bar' })
-  t.equal(res.statusCode, 204)
+  t.assert.strictEqual(res.statusCode, 204)
   await triggerLog(t, app, '/bar')
   await triggerLog(t, app, '/foo')
   await triggerLog(t, app, '/none')
@@ -145,16 +145,16 @@ test('Basic usage', async (t) => {
     'none fatal'
   ])
 
-  t.same(logStream.messages(), expected)
+  t.assert.deepStrictEqual(logStream.messages(), expected)
 
   {
     const res = await getLogLevels(app)
-    t.equal(res.statusCode, 404)
+    t.assert.strictEqual(res.statusCode, 404)
   }
 
   {
     const res = await getCurrentLogLevels(app)
-    t.equal(res.statusCode, 404)
+    t.assert.strictEqual(res.statusCode, 404)
   }
 })
 
@@ -186,14 +186,14 @@ test('Does not overwrite plugin config', async (t) => {
   ])
 
   const res = await changeLogLevel(app, { level: 'trace', contextName: 'bar' })
-  t.equal(res.statusCode, 204)
+  t.assert.strictEqual(res.statusCode, 204)
   await triggerLog(t, app, '/bar')
   expected.push(...[
     // 'bar debug',
     'bar fatal'
   ])
 
-  t.same(logStream.messages(), expected)
+  t.assert.deepStrictEqual(logStream.messages(), expected)
 })
 
 test('Does not overwrite route config', async (t) => {
@@ -229,7 +229,7 @@ test('Does not overwrite route config', async (t) => {
     'bar fatal'
   ])
 
-  t.same(logStream.messages(), expected)
+  t.assert.deepStrictEqual(logStream.messages(), expected)
 })
 
 test('Bad input', async (t) => {
@@ -242,7 +242,7 @@ test('Bad input', async (t) => {
 
   {
     const res = await changeLogLevel(app, { level: 'warn', contextName: 'bar' })
-    t.same(res.json(), {
+    t.assert.deepStrictEqual(res.json(), {
       statusCode: 404,
       error: 'Not Found',
       message: 'Context not found'
@@ -251,17 +251,17 @@ test('Bad input', async (t) => {
 
   {
     const res = await changeLogLevel(app, { level: 'what', contextName: 'bar' })
-    t.equal(res.statusCode, 400)
+    t.assert.strictEqual(res.statusCode, 400)
   }
 
   {
     const res = await changeLogLevel(app, { level: 'info' })
-    t.equal(res.statusCode, 400)
+    t.assert.strictEqual(res.statusCode, 400)
   }
 
   {
     const res = await changeLogLevel(app, { level: 'info', contextName: 'x'.repeat(1000) })
-    t.equal(res.statusCode, 400)
+    t.assert.strictEqual(res.statusCode, 400)
   }
 })
 
@@ -285,8 +285,8 @@ test('Bad usage', async (t) => {
     await app.ready()
     t.fail('should throw')
   } catch (error) {
-    t.ok(error)
-    t.equal(error.message, 'The instance named foo has been already registered')
+    t.assert.ok(error)
+    t.assert.strictEqual(error.message, 'The instance named foo has been already registered')
   }
 })
 
@@ -335,12 +335,12 @@ test('Custom log levels', async (t) => {
 
   {
     const res = await getCurrentLogLevels(app)
-    t.equal(res.statusCode, 200)
-    t.same(res.json(), [{ contextName: 'bar', level: 'trace' }])
+    t.assert.strictEqual(res.statusCode, 200)
+    t.assert.deepStrictEqual(res.json(), [{ contextName: 'bar', level: 'trace' }])
   }
 
   const res = await changeLogLevel(app, { level: 'foo', contextName: 'bar' })
-  t.equal(res.statusCode, 204)
+  t.assert.strictEqual(res.statusCode, 204)
 
   await triggerLog(t, app, '/bar')
   expected.push(...[
@@ -349,23 +349,23 @@ test('Custom log levels', async (t) => {
     'bar fatal'
   ])
 
-  t.same(logStream.messages(), expected)
+  t.assert.deepStrictEqual(logStream.messages(), expected)
 
   {
     const res = await changeLogLevel(app, { level: 'baz', contextName: 'bar' })
-    t.equal(res.statusCode, 400)
+    t.assert.strictEqual(res.statusCode, 400)
   }
 
   {
     const res = await getLogLevels(app)
-    t.equal(res.statusCode, 200)
-    t.same(res.json(), ['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'trentatre', 'foo'])
+    t.assert.strictEqual(res.statusCode, 200)
+    t.assert.deepStrictEqual(res.json(), ['trace', 'debug', 'info', 'warn', 'error', 'fatal', 'trentatre', 'foo'])
   }
 
   {
     const res = await getCurrentLogLevels(app)
-    t.equal(res.statusCode, 200)
-    t.same(res.json(), [{ contextName: 'bar', level: 'foo' }])
+    t.assert.strictEqual(res.statusCode, 200)
+    t.assert.deepStrictEqual(res.json(), [{ contextName: 'bar', level: 'foo' }])
   }
 })
 
@@ -374,7 +374,7 @@ async function triggerLog (t, app, url) {
     method: 'GET',
     url
   })
-  t.equal(res.statusCode, 200)
+  t.assert.strictEqual(res.statusCode, 200)
   return res
 }
 
