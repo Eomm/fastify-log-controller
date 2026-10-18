@@ -4,6 +4,7 @@ const { test } = require('node:test')
 const split = require('split2')
 
 const Fastify = require('fastify')
+const { LogController } = require('fastify')
 const pino = require('pino')
 
 const plugin = require('../plugin')
@@ -36,7 +37,7 @@ function buildTestLogger () {
 test('Basic usage', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: logStream.config
   })
 
@@ -161,7 +162,7 @@ test('Basic usage', async (t) => {
 test('Does not overwrite plugin config', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: logStream.config
   })
 
@@ -199,7 +200,7 @@ test('Does not overwrite plugin config', async (t) => {
 test('Does not overwrite route config', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: logStream.config
   })
 
@@ -235,7 +236,7 @@ test('Does not overwrite route config', async (t) => {
 test('Bad input', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: logStream.config
   })
   app.register(plugin)
@@ -268,7 +269,7 @@ test('Bad input', async (t) => {
 test('Bad usage', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: logStream.config
   })
   app.register(plugin)
@@ -293,7 +294,7 @@ test('Bad usage', async (t) => {
 test('Custom log levels', async (t) => {
   const logStream = buildTestLogger()
   const app = Fastify({
-    disableRequestLogging: true,
+    logController: new LogController({ disableRequestLogging: true }),
     logger: {
       ...logStream.config,
       customLevels: {
