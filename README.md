@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/Eomm/fastify-log-controller/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Eomm/fastify-log-controller/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/fastify-log-controller)](https://www.npmjs.com/package/fastify-log-controller)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![neostandard javascript style](https://img.shields.io/badge/code_style-neostandard-brightgreen?style=flat)](https://github.com/neostandard/neostandard)
 
 Control your application logs from your dashboard, at runtime!
 
